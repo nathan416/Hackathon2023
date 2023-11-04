@@ -13,3 +13,5 @@ C:\Users\natha\OneDrive - Gonzaga University\Desktop\Hackathon2023\EbookWebScrap
 C:\Users\natha\OneDrive - Gonzaga University\Desktop\Hackathon2023\EbookWebScraper\obj\Debug\net6.0\EbookWebScraper.pdb
 C:\Users\natha\OneDrive - Gonzaga University\Desktop\Hackathon2023\EbookWebScraper\obj\Debug\net6.0\EbookWebScraper.genruntimeconfig.cache
 C:\Users\natha\OneDrive - Gonzaga University\Desktop\Hackathon2023\EbookWebScraper\obj\Debug\net6.0\ref\EbookWebScraper.dll
+C:\Users\natha\OneDrive - Gonzaga University\Desktop\Hackathon2023\EbookWebScraper\bin\Debug\net6.0\HtmlAgilityPack.dll
+C:\Users\natha\OneDrive - Gonzaga University\Desktop\Hackathon2023\EbookWebScraper\obj\Debug\net6.0\EbookWebScraper.csproj.CopyComplete

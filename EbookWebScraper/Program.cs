@@ -4,12 +4,13 @@
 // Team Name: The Llammas
 // Date: 11/4/2023
 using System.Text.RegularExpressions;
+using HtmlAgilityPack;
 
 string Pattern = "[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)";
 
 EbookWebScraper scraper = new EbookWebScraper();
 bool IsValidURL = false;
-string? IndexURL = "";
+string? IndexURL;
 do
 {
     Console.WriteLine("Please enter URL for index page");
@@ -26,34 +27,34 @@ do
 } while (!IsValidURL);
 if (IsValidURL)
 {
-    scraper.GetHTML(IndexURL);
-    Console.WriteLine(scraper.Result);
-    Console.ReadKey();
-    Console.WriteLine(scraper.Result);
+    scraper.GetWebData(IndexURL);
+    Console.WriteLine(scraper.Title);
 }
 
 //Console.WriteLine("{0}", URLMatch.Value);
 class EbookWebScraper
 {
     private string result = "";
+    private string title = "";
+    private string author = "";
+    private int chapterAmount = 0;
+    private List<string> chapterURLList;
 
     public EbookWebScraper()
     {
+        
+    }
+
+    public void GetWebData(string URL)
+    {
+        HtmlWeb web = new HtmlWeb();
+        HtmlDocument doc = web.Load(URL);
+        Title = doc.DocumentNode.SelectSingleNode("/html/body/div[3]/div/div/div/div[1]/div/div[1]/div[2]/div/h1").Attributes["value"].Value;
     }
 
     public string Result { get => result; set => result = value; }
-
-    public async void GetHTML(string URL)
-    {
-        using (HttpClient client = new HttpClient())
-        {
-            using (HttpResponseMessage response = await client.GetAsync(URL))
-            {
-                using (HttpContent content = response.Content)
-                {
-                    Result = await content.ReadAsStringAsync();
-                }
-            }
-        }
-    }
+    public List<string> ChapterURLList { get => chapterURLList; set => chapterURLList = value; }
+    public int ChapterAmount { get => chapterAmount; set => chapterAmount = value; }
+    public string Author { get => author; set => author = value; }
+    public string Title { get => title; set => title = value; }
 }

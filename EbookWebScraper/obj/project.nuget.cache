@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "huFWGihiv3hQZtBnxX9vsQePsBKr1SgwrZyr1Pzlj3wWwfMAXESz1hhvN6TN99geazzGM3GZvs+L6fcLJ4vtOA==",
+  "dgSpecHash": "3szMTPsVg5D1+I4y/JxZivDlPF/Dz3yYRkrtd3VK+eOlOVTU6QN33mLKq/eoR0gIFEB/D0K3E27vQ5UP/qliWw==",
   "success": true,
   "projectFilePath": "C:\\Users\\natha\\OneDrive - Gonzaga University\\Desktop\\Hackathon2023\\EbookWebScraper\\EbookWebScraper.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\natha\\.nuget\\packages\\htmlagilitypack\\1.11.54\\htmlagilitypack.1.11.54.nupkg.sha512"
+  ],
   "logs": []
 }

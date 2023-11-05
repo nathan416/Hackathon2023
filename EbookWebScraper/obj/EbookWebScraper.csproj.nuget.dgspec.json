@@ -44,10 +44,6 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
-            "Aspose.Words": {
-              "target": "Package",
-              "version": "[23.10.0, )"
-            },
             "HtmlAgilityPack": {
               "target": "Package",
               "version": "[1.11.54, )"

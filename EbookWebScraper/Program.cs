@@ -2,13 +2,15 @@
 // Project: EbookWebScraper
 // Author: Nathan Flack
 // Team Name: The Llammas
+// Senior Undergraduate
 // Date: 11/4/2023
+// Inspiration: WebtoEpub Chrome Extension
+// Resources:
+// HtmlAgilityPack for parsing HTML and downloading chapters
+// ShellProgressBar for the command line progress bar
+// VIEApps Epub library for making the epub file
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using Aspose.Words;
-using Aspose.Words.Saving;
-using System.Text;
-using net.vieapps.Components.Utility.Epub;
 using ShellProgressBar;
 
 string Pattern = @"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";
@@ -21,7 +23,7 @@ do
 {
     Console.WriteLine("Please enter URL for index page");
     IndexURL = Console.ReadLine();
-    IndexURL = "https://www.royalroad.com/fiction/75025/clover-a-litrpg-apocalypse?source=recommender&recommender_version=5";
+    //IndexURL = "https://www.royalroad.com/fiction/75025/clover-a-litrpg-apocalypse?source=recommender&recommender_version=5";
     //IndexURL = "https://www.royalroad.com/fiction/61480/amelia-the-level-zero-hero-an-op-mc-isekai-litrpg";
     Match URLMatch = Regex.Match(IndexURL, Pattern);
     if (URLMatch.Success)
@@ -143,17 +145,14 @@ class Ebook
 	    </html>".Trim().Replace("\t", "");
 
         // cover
-        Epub1.AddXhtmlData("page0.xhtml", pageTemplate.Replace("{0}", Title).Replace("{1}", "Hello World"));
+        Epub1.AddXhtmlData("page0.xhtml", pageTemplate.Replace("{0}", Title).Replace("{1}", Title));
 
         // chapter
         for (var index = 0; index < ChapterList.Count; index++)
         {
             var name = string.Format("page{0}.xhtml", index + 1);
             var content = ChapterList[index];
-
-            
-
-            Epub1.AddXhtmlData(name, pageTemplate.Replace("{0}", content.ChapterTitle).Replace("{1}", content.ChapterBody.InnerHtml));
+            Epub1.AddXhtmlData(name, pageTemplate.Replace("{0}", content.ChapterTitle).Replace("{1}", "<h1>" + content.ChapterTitle + "</h1>"+ content.ChapterBody.InnerHtml));
             Epub1.AddNavPoint(content.ChapterTitle + " - " + (index + 1).ToString(), name, index + 1);
         }
 

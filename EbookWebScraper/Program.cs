@@ -9,12 +9,13 @@
 // HtmlAgilityPack for parsing HTML and downloading chapters
 // ShellProgressBar for the command line progress bar
 // VIEApps Epub library for making the epub file
+// Description: This is a command line application that takes a web novel from the internet and turns it into epub file on my computer.
+// For now it can only work with books from the site "Royal Road" at https://www.royalroad.com
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ShellProgressBar;
 
-string Pattern = @"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";
-
+string Pattern = @"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";             //regex for URL validation
 
 Ebook scraper = new();
 bool IsValidURL = false;
@@ -23,8 +24,6 @@ do
 {
     Console.WriteLine("Please enter URL for index page");
     IndexURL = Console.ReadLine();
-    //IndexURL = "https://www.royalroad.com/fiction/75025/clover-a-litrpg-apocalypse?source=recommender&recommender_version=5";
-    //IndexURL = "https://www.royalroad.com/fiction/61480/amelia-the-level-zero-hero-an-op-mc-isekai-litrpg";
     Match URLMatch = Regex.Match(IndexURL, Pattern);
     if (URLMatch.Success)
     {
@@ -37,24 +36,13 @@ do
 } while (!IsValidURL);
 if (IsValidURL)
 {
-    //Console.ReadKey();
-
-    //Console.WriteLine(scraper.Title);
-    //Console.WriteLine(scraper.Author);
-    //foreach (var chapter in scraper.ChapterList)
-    //{
-    //    Console.WriteLine(chapter.ChapterTitle);
-    //    Console.WriteLine(chapter.ChapterURL);
-    //}
-    //Console.WriteLine(scraper.ChapterList.Count);
-    //scraper.ChapterList[63].GetChapterWebData();
-    //Console.WriteLine(scraper.ChapterList[63].ChapterBody[0].InnerText);
     scraper.GetIndexWebData(IndexURL);
     scraper.GetAllChapterText();
     scraper.SaveToEpub();
-
-    //Console.WriteLine("{0}", URLMatch.Value);
 }
+/// <summary>
+/// Class that holds all the information about a single book
+/// </summary>
 class Ebook
 {
     private readonly string BASEURL = "https://www.royalroad.com";
@@ -63,7 +51,9 @@ class Ebook
     public string? Title { get; set; }
     public List<Chapter> ChapterList { get; set; }
     private net.vieapps.Components.Utility.Epub.Document Epub = new();
- 
+    /// <summary>
+    /// constructor
+    /// </summary>
     public Ebook()
     {
         ChapterList = new();
@@ -71,6 +61,9 @@ class Ebook
     public string CoverImage { get; set; }
     public net.vieapps.Components.Utility.Epub.Document Epub1 { get => Epub; set => Epub = value; }
 
+    /// <summary>
+    /// Uses the GetChapterWebData function to get the book from the site and load it into the class
+    /// </summary>
     public void GetAllChapterText()
     {
         var options = new ProgressBarOptions
@@ -88,33 +81,11 @@ class Ebook
             }
         }
     }
+    /// <summary>
+    /// Formats the ebook information into epub format and saves it to a file
+    /// </summary>
     public void SaveToEpub()
     {
-        //HtmlSaveOptions saveOptions = new HtmlSaveOptions();
-        //saveOptions.SaveFormat = SaveFormat.Epub;
-        //saveOptions.Encoding = Encoding.UTF8;
-        //// create a blank document
-        //Document doc = new Document();
-        //// the DocumentBuilder class provides members to easily add content to a document
-        //DocumentBuilder builder = new DocumentBuilder(doc);
-        //// write a new paragraph in the document
-        //foreach (Chapter chapter in ChapterList)
-        //{
-        //    //builder.Writeln(chapter.ChapterTitle);
-        //    builder.InsertHtml(string.Format("<h1>{0}</h1>", chapter.ChapterTitle));
-        //    foreach (HtmlNode paragraph in chapter.ChapterBody)
-        //    {
-        //        builder.Writeln(paragraph.InnerText);
-        //        builder.Writeln();
-        //        builder.Writeln();
-        //    }
-        //}
-        //saveOptions.DocumentSplitCriteria = DocumentSplitCriteria.HeadingParagraph;
-
-        //// Specify that we want to export document properties.
-        //saveOptions.ExportDocumentProperties = true;
-
-        //doc.Save("C:\\Users\\natha\\OneDrive - Gonzaga University\\Desktop\\Hackathon2023\\EbookWebScraper\\output\\" + "output.epub", saveOptions);
         var Uuid = Guid.NewGuid();
         Epub1.AddBookIdentifier(Uuid.ToString());
         Epub1.AddLanguage("English");
@@ -152,7 +123,7 @@ class Ebook
         {
             var name = string.Format("page{0}.xhtml", index + 1);
             var content = ChapterList[index];
-            Epub1.AddXhtmlData(name, pageTemplate.Replace("{0}", content.ChapterTitle).Replace("{1}", "<h1>" + content.ChapterTitle + "</h1>"+ content.ChapterBody.InnerHtml));
+            Epub1.AddXhtmlData(name, pageTemplate.Replace("{0}", content.ChapterTitle).Replace("{1}", "<h1>" + content.ChapterTitle + "</h1>"+ content.ChapterBody.InnerHtml.Replace("<br>", "").Replace("&nbsp;", "")));
             Epub1.AddNavPoint(content.ChapterTitle + " - " + (index + 1).ToString(), name, index + 1);
         }
 
@@ -160,6 +131,10 @@ class Ebook
 
     }
 
+    /// <summary>
+    /// Gets information about the whole ebook such as chapter names, URLs, title, author, etc.
+    /// </summary>
+    /// <param name="URL">URL that points toward the index of the ebook</param>
     public void GetIndexWebData(string URL)
     {
         HtmlWeb web = new();
@@ -178,13 +153,12 @@ class Ebook
             ChapterList.Add(chapter);
         }
         ChapterAmount = ChapterList.Count;
-        //Title = doc.DocumentNode
-        //.SelectNodes("//body")
-        //.First()
-        //.OuterHtml;
     }
 }
 
+/// <summary>
+/// Class for holding information about individual chapters
+/// </summary>
 class Chapter
 {
     public Chapter(string? chapterTitle, string? chapterURL)
@@ -199,6 +173,9 @@ class Chapter
     public HtmlNodeCollection? ChapterPreAuthorNote { get; set; }
     public HtmlNodeCollection? ChapterPostAuthorNote { get; set; }
 
+    /// <summary>
+    /// Requests the html from the chapter URL and puts the body text into the class
+    /// </summary>
     public void GetChapterWebData()
     {
         HtmlWeb web = new();

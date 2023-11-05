@@ -8,7 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspose.Words" Version="23.10.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.54" />
+    <PackageReference Include="ShellProgressBar" Version="5.2.0" />
+    <PackageReference Include="VIEApps.Components.Utility.Epub" Version="10.8.2310.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="output\" />
   </ItemGroup>
 
 </Project>

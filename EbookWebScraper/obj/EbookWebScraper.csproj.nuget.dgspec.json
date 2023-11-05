@@ -44,9 +44,21 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "Aspose.Words": {
+              "target": "Package",
+              "version": "[23.10.0, )"
+            },
             "HtmlAgilityPack": {
               "target": "Package",
               "version": "[1.11.54, )"
+            },
+            "ShellProgressBar": {
+              "target": "Package",
+              "version": "[5.2.0, )"
+            },
+            "VIEApps.Components.Utility.Epub": {
+              "target": "Package",
+              "version": "[10.8.2310.2, )"
             }
           },
           "imports": [

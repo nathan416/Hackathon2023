@@ -50,7 +50,7 @@ class Ebook
     public string? Author { get; set; }
     public string? Title { get; set; }
     public List<Chapter> ChapterList { get; set; }
-    private net.vieapps.Components.Utility.Epub.Document Epub = new();
+    private net.vieapps.Components.Utility.Epub.Document epub = new();
     /// <summary>
     /// constructor
     /// </summary>
@@ -59,7 +59,7 @@ class Ebook
         ChapterList = new();
     }
     public string CoverImage { get; set; }
-    public net.vieapps.Components.Utility.Epub.Document Epub1 { get => Epub; set => Epub = value; }
+    public net.vieapps.Components.Utility.Epub.Document Epub { get => epub; set => epub = value; }
 
     /// <summary>
     /// Uses the GetChapterWebData function to get the book from the site and load it into the class
@@ -87,12 +87,12 @@ class Ebook
     public void SaveToEpub()
     {
         var Uuid = Guid.NewGuid();
-        Epub1.AddBookIdentifier(Uuid.ToString());
-        Epub1.AddLanguage("English");
-        Epub1.AddTitle(Title);
-        Epub1.AddAuthor(Author);
+        Epub.AddBookIdentifier(Uuid.ToString());
+        Epub.AddLanguage("English");
+        Epub.AddTitle(Title);
+        Epub.AddAuthor(Author);
         string readText = File.ReadAllText("C:\\Users\\natha\\OneDrive - Gonzaga University\\Desktop\\Hackathon2023\\EbookWebScraper\\stylesheet.css");
-        Epub1.AddStylesheetData("style.css", readText);
+        Epub.AddStylesheetData("style.css", readText);
 
         //var coverImageId = Epub.AddImageData("cover.jpg", coverImageBinaryData);
         //Epub.AddMetaItem("cover", coverImageId);
@@ -116,18 +116,18 @@ class Ebook
 	    </html>".Trim().Replace("\t", "");
 
         // cover
-        Epub1.AddXhtmlData("page0.xhtml", pageTemplate.Replace("{0}", Title).Replace("{1}", Title));
+        Epub.AddXhtmlData("page0.xhtml", pageTemplate.Replace("{0}", Title).Replace("{1}", Title));
 
         // chapter
         for (var index = 0; index < ChapterList.Count; index++)
         {
             var name = string.Format("page{0}.xhtml", index + 1);
             var content = ChapterList[index];
-            Epub1.AddXhtmlData(name, pageTemplate.Replace("{0}", content.ChapterTitle).Replace("{1}", "<h1>" + content.ChapterTitle + "</h1>"+ content.ChapterBody.InnerHtml.Replace("<br>", "").Replace("&nbsp;", "")));
-            Epub1.AddNavPoint(content.ChapterTitle + " - " + (index + 1).ToString(), name, index + 1);
+            Epub.AddXhtmlData(name, pageTemplate.Replace("{0}", content.ChapterTitle).Replace("{1}", "<h1>" + content.ChapterTitle + "</h1>"+ content.ChapterBody.InnerHtml.Replace("<br>", "").Replace("&nbsp;", "")));
+            Epub.AddNavPoint(content.ChapterTitle + " - " + (index + 1).ToString(), name, index + 1);
         }
 
-        Epub1.Generate("C:\\Users\\natha\\OneDrive - Gonzaga University\\Desktop\\Hackathon2023\\EbookWebScraper\\output\\output.epub");
+        Epub.Generate("C:\\Users\\natha\\OneDrive - Gonzaga University\\Desktop\\Hackathon2023\\EbookWebScraper\\output\\output.epub");
 
     }
 

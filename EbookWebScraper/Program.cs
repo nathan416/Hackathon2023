@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ShellProgressBar;
 
-string Pattern = @"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";             //regex for URL validation
+string URLValidationPattern = @"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";             //regex for URL validation
 
 Ebook scraper = new();
 bool IsValidURL = false;
@@ -24,28 +24,32 @@ do
 {
     Console.WriteLine("Please enter URL for index page");
     IndexURL = Console.ReadLine();
-    Match URLMatch = Regex.Match(IndexURL, Pattern);
+    Match URLMatch = Regex.Match(IndexURL, URLValidationPattern);
+    Regex.Match(IndexURL, URLValidationPattern);
     if (URLMatch.Success)
     {
         IsValidURL = true;
+        if (!scraper.GetIndexWebData(IndexURL))
+        {
+            Console.WriteLine("ERROR: Invalid Web Novel Site, Please enter valid site");
+            IsValidURL = false;
+        }
     }
     else
     {
         Console.WriteLine("ERROR: Invalid URL, Please enter valid URL");
     }
 } while (!IsValidURL);
-if (IsValidURL)
-{
-    scraper.GetIndexWebData(IndexURL);
-    scraper.GetAllChapterText();
-    scraper.SaveToEpub();
-}
+scraper.GetAllChapterText();
+scraper.SaveToEpub();
 /// <summary>
 /// Class that holds all the information about a single book
 /// </summary>
 class Ebook
 {
+    private readonly string? BaseFolder = Path.GetDirectoryName(Environment.ProcessPath);
     private readonly string BASEURL = "https://www.royalroad.com";
+    private string[] ValidWebSites = { "https://www.royalroad.com", "https://www.scribblehub.com" };
     public int ChapterAmount { get; set; }
     public string? Author { get; set; }
     public string? Title { get; set; }
@@ -91,7 +95,7 @@ class Ebook
         Epub.AddLanguage("English");
         Epub.AddTitle(Title);
         Epub.AddAuthor(Author);
-        string readText = File.ReadAllText("C:\\Users\\natha\\OneDrive - Gonzaga University\\Desktop\\Hackathon2023\\EbookWebScraper\\stylesheet.css");
+        string readText = File.ReadAllText(BaseFolder + @"..\stylesheet.css");
         Epub.AddStylesheetData("style.css", readText);
 
         //var coverImageId = Epub.AddImageData("cover.jpg", coverImageBinaryData);
@@ -127,7 +131,7 @@ class Ebook
             Epub.AddNavPoint(content.ChapterTitle + " - " + (index + 1).ToString(), name, index + 1);
         }
 
-        Epub.Generate("C:\\Users\\natha\\OneDrive - Gonzaga University\\Desktop\\Hackathon2023\\EbookWebScraper\\output\\output.epub");
+        Epub.Generate(BaseFolder + @"..\output\" + Title.Trim() + ".epub");
 
     }
 
@@ -135,8 +139,15 @@ class Ebook
     /// Gets information about the whole ebook such as chapter names, URLs, title, author, etc.
     /// </summary>
     /// <param name="URL">URL that points toward the index of the ebook</param>
-    public void GetIndexWebData(string URL)
+    public bool GetIndexWebData(string URL)
     {
+        string DomainNamePattern = @"^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)";
+        Match DomainName = Regex.Match(URL, DomainNamePattern);
+        if (!ValidWebSites.Contains(DomainName.Value))
+        {
+            return false;
+        }
+
         HtmlWeb web = new();
         HtmlDocument doc = web.Load(URL);
         var node = doc.DocumentNode.SelectSingleNode("/html/body/div[3]/div/div/div/div[1]/div/div[1]/div[2]/div/h1");
@@ -153,6 +164,7 @@ class Ebook
             ChapterList.Add(chapter);
         }
         ChapterAmount = ChapterList.Count;
+        return true;
     }
 }
 
@@ -174,7 +186,7 @@ class Chapter
     public HtmlNodeCollection? ChapterPostAuthorNote { get; set; }
 
     /// <summary>
-    /// Requests the html from the chapter URL and puts the body text into the class
+    /// Requests the html from the chapter URL and puts the chapter body text into the class
     /// </summary>
     public void GetChapterWebData()
     {

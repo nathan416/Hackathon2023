@@ -1,0 +1,18 @@
+{
+  "WebNovelSites": [
+    {
+      "Site": "https://www.royalroad.com",
+      "TitleXSS": "/html/body/div[3]/div/div/div/div[1]/div/div[1]/div[2]/div/h1",
+      "AuthorXSS": "/html/body/div[3]/div/div/div/div[1]/div/div[1]/div[2]/div/h4/span[2]/a",
+      "ChapterListXSS": "//*[@id=\"chapters\"]/tbody/tr/td[1]/a",
+      "ChapterBodyXSS": "//*[@class=\"chapter-inner chapter-content\"]"
+    },
+    {
+      "Site": "https://www.scribblehub.com",
+      "TitleXSS": "John",
+      "AuthorXSS": "Doe",
+      "ChapterListXSS": "Doe",
+      "ChapterBodyXSS": "Doe"
+    }
+  ]
+}

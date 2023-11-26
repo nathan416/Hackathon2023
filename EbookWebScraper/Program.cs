@@ -14,6 +14,7 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ShellProgressBar;
+using System.Text.Json;
 
 string URLValidationPattern = @"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";             //regex for URL validation
 
@@ -47,23 +48,43 @@ scraper.SaveToEpub();
 /// </summary>
 class Ebook
 {
+    private class JsonConfig
+    {
+        public IList<SupportedSiteDetails>? WebNovelSites { get; set; }
+    }
+    private class SupportedSiteDetails
+    {
+        public string? Site { get; set; }
+        public string? TitleXSS { get; set; }
+        public string? AuthorXSS { get; set; }
+        public string? ChapterListXSS { get; set; }
+        public string? ChapterBodyXSS { get; set; }
+    }
     private readonly string? BaseFolder = Path.GetDirectoryName(Environment.ProcessPath);
-    private readonly string BASEURL = "https://www.royalroad.com";
-    private string[] ValidWebSites = { "https://www.royalroad.com", "https://www.scribblehub.com" };
+    private string _DomainName = "";
+    private readonly string[] ValidWebSites = { "https://www.royalroad.com", "https://www.scribblehub.com" };
+    private JsonConfig _ValidSiteList = new();
     public int ChapterAmount { get; set; }
     public string? Author { get; set; }
     public string? Title { get; set; }
     public List<Chapter> ChapterList { get; set; }
     private net.vieapps.Components.Utility.Epub.Document epub = new();
+    private SupportedSiteDetails _ChosenSite = new();
     /// <summary>
     /// constructor
     /// </summary>
     public Ebook()
     {
         ChapterList = new();
+        string fileName = BaseFolder + @"\..\..\..\config.json";
+        string jsonString = File.ReadAllText(fileName);
+        ValidSiteList = JsonSerializer.Deserialize<JsonConfig>(jsonString);
     }
     public string CoverImage { get; set; }
     public net.vieapps.Components.Utility.Epub.Document Epub { get => epub; set => epub = value; }
+    public string DomainName { get => _DomainName; set => _DomainName = value; }
+    private JsonConfig ValidSiteList { get => _ValidSiteList; set => _ValidSiteList = value; }
+    private SupportedSiteDetails ChosenSite { get => _ChosenSite; set => _ChosenSite = value; }
 
     /// <summary>
     /// Uses the GetChapterWebData function to get the book from the site and load it into the class
@@ -95,7 +116,7 @@ class Ebook
         Epub.AddLanguage("English");
         Epub.AddTitle(Title);
         Epub.AddAuthor(Author);
-        string readText = File.ReadAllText(BaseFolder + @"..\stylesheet.css");
+        string readText = File.ReadAllText(BaseFolder + @"\..\..\..\stylesheet.css");
         Epub.AddStylesheetData("style.css", readText);
 
         //var coverImageId = Epub.AddImageData("cover.jpg", coverImageBinaryData);
@@ -131,7 +152,7 @@ class Ebook
             Epub.AddNavPoint(content.ChapterTitle + " - " + (index + 1).ToString(), name, index + 1);
         }
 
-        Epub.Generate(BaseFolder + @"..\output\" + Title.Trim() + ".epub");
+        Epub.Generate(BaseFolder + @"\..\..\..\output\" + Title.Replace(" ", "") + ".epub");
 
     }
 
@@ -139,28 +160,33 @@ class Ebook
     /// Gets information about the whole ebook such as chapter names, URLs, title, author, etc.
     /// </summary>
     /// <param name="URL">URL that points toward the index of the ebook</param>
+    /// <returns>bool that represents whether the website is a supported site</returns>
     public bool GetIndexWebData(string URL)
     {
         string DomainNamePattern = @"^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)";
-        Match DomainName = Regex.Match(URL, DomainNamePattern);
-        if (!ValidWebSites.Contains(DomainName.Value))
+        Match DomainNameMatch = Regex.Match(URL, DomainNamePattern);
+        DomainName = DomainNameMatch.Value;
+        foreach (SupportedSiteDetails? ValidWebSite in ValidSiteList.WebNovelSites)
         {
-            return false;
+            if (ValidWebSite.Site == DomainName)
+            {
+                ChosenSite = ValidWebSite;
+            }
         }
 
         HtmlWeb web = new();
         HtmlDocument doc = web.Load(URL);
-        var node = doc.DocumentNode.SelectSingleNode("/html/body/div[3]/div/div/div/div[1]/div/div[1]/div[2]/div/h1");
+        var node = doc.DocumentNode.SelectSingleNode(ChosenSite.TitleXSS);
         Title = node.InnerHtml;
-        node = doc.DocumentNode.SelectSingleNode("/html/body/div[3]/div/div/div/div[1]/div/div[1]/div[2]/div/h4/span[2]/a");
+        node = doc.DocumentNode.SelectSingleNode(ChosenSite.AuthorXSS);
         Author = node.InnerHtml;
-        var nodeCollection = doc.DocumentNode.SelectNodes("//*[@id=\"chapters\"]/tbody/tr/td[1]/a");
+        var nodeCollection = doc.DocumentNode.SelectNodes(ChosenSite.ChapterListXSS);
         //(Chapter Name, Chapter URL)
         foreach (HtmlNode Node in nodeCollection)
         {
             var ChapterName = Node.InnerText.Trim();
-            string? ChapterURL = String.Concat(BASEURL, Node.Attributes[0].Value);
-            Chapter chapter = new(ChapterName, ChapterURL);
+            string? ChapterURL = String.Concat(DomainName, Node.Attributes[0].Value);
+            Chapter chapter = new(ChapterName, ChapterURL, ChosenSite.ChapterBodyXSS);
             ChapterList.Add(chapter);
         }
         ChapterAmount = ChapterList.Count;
@@ -173,12 +199,13 @@ class Ebook
 /// </summary>
 class Chapter
 {
-    public Chapter(string? chapterTitle, string? chapterURL)
+    public Chapter(string? chapterTitle, string? chapterURL, string? chapterBodyXSS)
     {
         ChapterTitle = chapterTitle;
         ChapterURL = chapterURL;
+        ChapterBodyXSS = chapterBodyXSS;
     }
-
+    private string? ChapterBodyXSS { get; set; }
     public string? ChapterTitle { get; set; }
     public string? ChapterURL { get; set; }
     public HtmlNode? ChapterBody { get; set; }
@@ -193,7 +220,7 @@ class Chapter
         HtmlWeb web = new();
         HtmlDocument doc = web.Load(ChapterURL);
 
-        HtmlNode bodyNode = doc.DocumentNode.SelectSingleNode("//*[@class=\"chapter-inner chapter-content\"]");
+        HtmlNode bodyNode = doc.DocumentNode.SelectSingleNode(ChapterBodyXSS);
         ChapterBody = bodyNode;
         
 

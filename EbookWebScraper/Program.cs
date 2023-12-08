@@ -151,11 +151,19 @@ class Ebook
             Epub.AddXhtmlData(name, pageTemplate.Replace("{0}", content.ChapterTitle).Replace("{1}", "<h1>" + content.ChapterTitle + "</h1>"+ content.ChapterBody.InnerHtml.Replace("<br>", "").Replace("&nbsp;", "")));
             Epub.AddNavPoint(content.ChapterTitle + " - " + (index + 1).ToString(), name, index + 1);
         }
-
-        Epub.Generate(BaseFolder + @"\..\..\..\output\" + Title.Replace(" ", "") + ".epub");
+        string fileName = BaseFolder + @"\..\..\..\output\" + Title.Replace(" ", "").Replace(":", "").Replace("<", "").Replace(">", "").Replace("\"", "").Replace("/", "").Replace("\\", "").Replace("|", "").Replace("?", "").Replace("*", "") + @".epub";
+        Epub.Generate(fileName, PrintSuccess, PrintExc);
 
     }
 
+    private static void PrintSuccess(string mess)
+    {
+        Console.WriteLine(mess);
+    }
+    private static void PrintExc(Exception mess)
+    {
+        Console.WriteLine(mess);
+    }
     /// <summary>
     /// Gets information about the whole ebook such as chapter names, URLs, title, author, etc.
     /// </summary>
